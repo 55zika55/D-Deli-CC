@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Alexandria', sans-serif;
+  --font-mono: 'Alexandria', monospace;
+}
+
+@layer base {
+  *, ::before, ::after {
+    font-family: 'Alexandria', sans-serif !important;
+  }
+  html, body, button, input, select, textarea, table, th, td, div, span, p, h1, h2, h3, h4, h5, h6, label, pre, code {
+    font-family: 'Alexandria', sans-serif !important;
+  }
+}
+
+/* Dedicated Print Stylesheet */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 6mm;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 10pt !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
+    font-family: 'Alexandria', sans-serif !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Force container unwrapping so tables are not clipped */
+  #root, .max-w-7xl, main, .space-y-6, .space-y-4 {
+    overflow: visible !important;
+    height: auto !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Expand all horizontal overflow table wrappers */
+  .overflow-x-auto, .overflow-y-auto, .overflow-hidden, .overflow-auto {
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+
+  /* Hide app navigation, headers, sidebars, toolbars, buttons during print */
+  header, nav, .print\:hidden, [role="navigation"], button, input, select {
+    display: none !important;
+  }
+
+  /* Clean up dark containers for high-contrast crisp printing */
+  .bg-slate-900, .bg-slate-800, .bg-indigo-950, .bg-gradient-to-r {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: 1px solid #cbd5e1 !important;
+  }
+
+  .text-white, .text-slate-200, .text-slate-300, .text-slate-400 {
+    color: #1e293b !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto !important;
+    font-family: 'Alexandria', sans-serif !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  th, td {
+    border: 1px solid #cbd5e1 !important;
+    padding: 4px 6px !important;
+    font-size: 9pt !important;
+    color: #0f172a !important;
+    font-family: 'Alexandria', sans-serif !important;
+  }
+
+  /* Expand modal and print content to full page */
+  body.printing-recipes > #root > div > *:not(:has(.print-modal-container)),
+  body.printing-recipes > #root > div > header,
+  body.printing-recipes > #root > div > nav,
+  body.printing-recipes > #root > div > main,
+  body:has(.print-modal-container) main,
+  body:has(.print-modal-container) header,
+  body:has(.print-modal-container) nav,
+  body:has(.print-modal-container) footer {
+    display: none !important;
+  }
+
+  .print-modal-container {
+    position: static !important;
+    inset: auto !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+    box-shadow: none !important;
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .print-modal-card {
+    position: static !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    display: block !important;
+  }
+
+  .recipe-print-scroll-area {
+    overflow: visible !important;
+    max-height: none !important;
+    height: auto !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .recipe-print-page {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    border: 2px solid #0f172a !important;
+    margin-bottom: 20px !important;
+    padding: 14px !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-family: 'Alexandria', sans-serif !important;
+  }
+
+  .recipe-print-page.page-break-always {
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
+  .no-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "D-Deli Food Cost & Inventory Control",
+  "description": "Comprehensive Food Cost & Inventory Management system with Recipe BOM, Ledger movements, Theoretical vs Actual Variance, Par Ordering, Multi-Language support and User Authentication.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
