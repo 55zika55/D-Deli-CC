@@ -33,6 +33,7 @@ interface PhysicalInventoryModalProps {
   canEdit: boolean;
   onClose: () => void;
   onApplyCounts: (newEndCounts: number[]) => void;
+  onOpenReportsPrint?: (report: 'inventory') => void;
 }
 
 export const PhysicalInventoryModal: React.FC<PhysicalInventoryModalProps> = ({
@@ -41,7 +42,8 @@ export const PhysicalInventoryModal: React.FC<PhysicalInventoryModalProps> = ({
   currentLang,
   canEdit,
   onClose,
-  onApplyCounts
+  onApplyCounts,
+  onOpenReportsPrint
 }) => {
   const t = (key: string) => TRANSLATIONS[currentLang]?.[key] || key;
 
@@ -209,12 +211,18 @@ export const PhysicalInventoryModal: React.FC<PhysicalInventoryModalProps> = ({
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => window.print()}
-              className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl shadow flex items-center gap-1.5 transition active:scale-95"
-              title="طباعة فورمة الجرد على ورق A4"
+              onClick={() => {
+                if (onOpenReportsPrint) {
+                  onOpenReportsPrint('inventory');
+                } else {
+                  window.print();
+                }
+              }}
+              className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-xs font-semibold rounded-xl shadow flex items-center gap-1.5 transition active:scale-95"
+              title="طباعة وتصدير كشف الجرد على ورق A4 أو PDF"
             >
               <Printer className="w-4 h-4" />
-              <span className="hidden sm:inline">طباعة الكشف (A4)</span>
+              <span className="hidden sm:inline">طباعة الكشف / PDF</span>
             </button>
 
             <button

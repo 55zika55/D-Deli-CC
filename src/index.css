@@ -94,18 +94,19 @@
   }
 
   /* Expand modal and print content to full page */
-  body.printing-recipes > #root > div > *:not(:has(.print-modal-container)),
-  body.printing-recipes > #root > div > header,
-  body.printing-recipes > #root > div > nav,
-  body.printing-recipes > #root > div > main,
-  body:has(.print-modal-container) main,
-  body:has(.print-modal-container) header,
-  body:has(.print-modal-container) nav,
-  body:has(.print-modal-container) footer {
+  body.printing-recipes #root > div > header,
+  body.printing-recipes #root > div > nav,
+  body.printing-recipes #root > div > main,
+  body.printing-recipes #root > div > footer,
+  body.printing-recipes .print\:hidden,
+  body.printing-recipes button,
+  body.printing-recipes input,
+  body.printing-recipes select {
     display: none !important;
   }
 
-  .print-modal-container {
+  body.printing-recipes .print-modal-container {
+    display: block !important;
     position: static !important;
     inset: auto !important;
     background: #ffffff !important;
@@ -115,24 +116,21 @@
     max-height: none !important;
     height: auto !important;
     box-shadow: none !important;
-    display: block !important;
     width: 100% !important;
   }
 
-  .print-modal-card {
+  body.printing-recipes .print-modal-card {
+    display: block !important;
     position: static !important;
+    background: #ffffff !important;
     max-height: none !important;
     height: auto !important;
-    overflow: visible !important;
-    box-shadow: none !important;
     border: none !important;
-    border-radius: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
+    box-shadow: none !important;
     padding: 0 !important;
     margin: 0 !important;
-    background: #ffffff !important;
-    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   .recipe-print-scroll-area {

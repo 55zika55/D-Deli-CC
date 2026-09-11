@@ -13,6 +13,7 @@ interface SalesTabProps {
   onAddSale: (item?: Partial<SaleItem>) => void;
   onDeleteSale: (index: number) => void;
   onOpenMenuEngineering?: () => void;
+  onResetToAugustSales?: () => void;
 }
 
 export const SalesTab: React.FC<SalesTabProps> = ({
@@ -22,7 +23,8 @@ export const SalesTab: React.FC<SalesTabProps> = ({
   onUpdateSale,
   onAddSale,
   onDeleteSale,
-  onOpenMenuEngineering
+  onOpenMenuEngineering,
+  onResetToAugustSales
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -141,6 +143,43 @@ export const SalesTab: React.FC<SalesTabProps> = ({
   return (
     <div className="space-y-4">
       <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+        {/* Official August 2026 Sales Report Status Header */}
+        <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-xl flex flex-col md:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-base shadow-sm">
+              08
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-sm text-slate-900 dark:text-white">
+                  {isAr ? 'تقرير مبيعات شهر أغسطس 2026 المعتمد' : 'Official August 2026 Sales Report'}
+                </span>
+                <span className="text-[10px] bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full">
+                  {state.sales.length} {isAr ? 'صنفاً' : 'SKUs'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                {isAr ? 'إجمالي الكمية المباعة: ' : 'Total Sold Qty: '}
+                <strong className="text-blue-700 dark:text-blue-400 font-mono">{nf(totalQty)}</strong>
+                {' | '}
+                {isAr ? 'إجمالي إيراد المبيعات: ' : 'Total Sales Revenue: '}
+                <strong className="text-emerald-600 dark:text-emerald-400 font-mono">{money(totalRevenue)}</strong>
+              </p>
+            </div>
+          </div>
+
+          {onResetToAugustSales && canEdit && (
+            <button
+              onClick={onResetToAugustSales}
+              className="flex items-center gap-1.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 px-3 py-1.5 rounded-lg text-xs font-medium shadow-xs transition whitespace-nowrap self-stretch md:self-auto justify-center"
+              title={isAr ? 'استعادة مبيعات تقرير أغسطس 2026 وحذف التعديلات المؤقتة' : 'Restore Official August 2026 Sales Report'}
+            >
+              <span>🔄</span>
+              <span>{isAr ? 'استعادة مبيعات أغسطس 2026 الأصلية' : 'Restore August 2026 Sales'}</span>
+            </button>
+          )}
+        </div>
+
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-2">
             <ShoppingBag className="w-5 h-5 text-blue-600" />

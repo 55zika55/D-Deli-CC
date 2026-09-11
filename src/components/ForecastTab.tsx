@@ -20,7 +20,10 @@ import {
   Sparkles,
   Sliders,
   DollarSign,
-  PackageCheck
+  PackageCheck,
+  ChevronDown,
+  ChevronUp,
+  Info
 } from 'lucide-react';
 import { HistoricalSalesForecastCalculator } from './HistoricalSalesForecastCalculator';
 
@@ -30,6 +33,7 @@ interface ForecastTabProps {
   currentLang: Language;
   canEdit: boolean;
   onPostProductionBatch?: (prepItem: PrepItem, batches: number, date: string) => void;
+  onOpenReportsPrint?: (report: 'forecast') => void;
 }
 
 export const ForecastTab: React.FC<ForecastTabProps> = ({
@@ -37,7 +41,8 @@ export const ForecastTab: React.FC<ForecastTabProps> = ({
   metrics,
   currentLang,
   canEdit,
-  onPostProductionBatch
+  onPostProductionBatch,
+  onOpenReportsPrint
 }) => {
   // 1. Forecast Controls
   const [targetRevenue, setTargetRevenue] = useState<number>(200000);
@@ -51,6 +56,7 @@ export const ForecastTab: React.FC<ForecastTabProps> = ({
 
   // Item-level manual quantity overrides (optional tweaking by user)
   const [qtyOverrides, setQtyOverrides] = useState<Record<string, number>>({});
+  const [expandedPrepId, setExpandedPrepId] = useState<string | null>(null);
 
   const t = (key: string) => TRANSLATIONS[currentLang]?.[key] || key;
 
@@ -176,6 +182,49 @@ export const ForecastTab: React.FC<ForecastTabProps> = ({
 
       const batchCost = subIngredients.reduce((sum, si) => sum + si.totalCost, 0);
 
+      // Find all forecasted dishes that link to this prep item
+      const linkedDishes: {
+        code: string;
+        name: string;
+        group: string;
+        qty: number;
+        portionStd: number;
+        totalDemand: number;
+      }[] = [];
+
+      forecastedSales.forEach(fs => {
+        const r = fs.recipe;
+        if (!r || fs.expectedQty <= 0) return;
+        r.items.forEach(it => {
+          let isMatch = false;
+          if (ing && it.ingredientId === ing.id) isMatch = true;
+          else if (it.ing === p.name) isMatch = true;
+          else if (p.name.includes('عجين بيتزا') && (it.ing === 'بورشن عجين بيتزا' || it.ing === 'عجين بيتزا مخمر جاهز')) isMatch = true;
+          else if (p.name.includes('صلصه طماطم') && (it.ing === 'صلصه طماطم' || it.ing === 'صلصه طماطم بيتزا')) isMatch = true;
+          else if (p.name.includes('كاساديا') && p.name.includes('تتبيل') && it.ing.includes('كاساديا') && it.ing.includes('تتبيل')) isMatch = true;
+          else if (p.name.includes('كينوا') && it.ing.includes('كينوا') && it.ing.includes('صوص')) isMatch = true;
+          else if (p.name.includes('تونه مكس') && (it.ing.includes('تونه مكس') || it.ing === 'تونه مكس')) isMatch = true;
+          else if (p.name.includes('خضار كاساديا') && (it.ing.includes('خضار كاساديا') || it.ing === 'خضار كاساديا')) isMatch = true;
+          else if (p.name.includes('دجاج كاساديا') && it.ing.includes('دجاج كاساديا')) isMatch = true;
+          else if (p.name.includes('دجاج شاورما') && it.ing.includes('دجاج شاورما')) isMatch = true;
+          else if (p.name.includes('تومية شاورما') && it.ing.includes('توميه')) isMatch = true;
+          else if (p.name.includes('سيزار') && it.ing.includes('سيزار سلاد')) isMatch = true;
+          else if (p.name.includes('توابل الكبده') && it.ing.includes('توابل الكبده')) isMatch = true;
+          else if (p.name.includes('طحينه') && it.ing.includes('طحينه')) isMatch = true;
+
+          if (isMatch) {
+            linkedDishes.push({
+              code: fs.item.code,
+              name: fs.item.name,
+              group: fs.item.group || 'عام',
+              qty: fs.expectedQty,
+              portionStd: num(it.std),
+              totalDemand: fs.expectedQty * num(it.std)
+            });
+          }
+        });
+      });
+
       return {
         id: `prep-${idx}`,
         prepItem: p,
@@ -186,10 +235,11 @@ export const ForecastTab: React.FC<ForecastTabProps> = ({
         suggestedBatches,
         expectedOutput,
         subIngredients,
-        batchCost
+        batchCost,
+        linkedDishes
       };
     });
-  }, [ingNameMap, recipeCodeMap, grossDemandByIngId, state.roundUp, ingMap]);
+  }, [ingNameMap, recipeCodeMap, grossDemandByIngId, state.roundUp, ingMap, forecastedSales]);
 
   // 5. Total Procurement Requisition (Exploded Raw Materials)
   // For procurement: Direct raw ingredients + sub-ingredients of required prep batches
@@ -305,7 +355,11 @@ export const ForecastTab: React.FC<ForecastTabProps> = ({
   };
 
   const handlePrint = () => {
-    window.print();
+    if (onOpenReportsPrint) {
+      onOpenReportsPrint('forecast');
+    } else {
+      window.print();
+    }
   };
 
   const handlePostAllProduction = () => {
@@ -740,6 +794,16 @@ export const ForecastTab: React.FC<ForecastTabProps> = ({
           </div>
 
           {/* Prep Table */}
+          <div className="mb-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 bg-purple-50/60 dark:bg-purple-950/20 p-2.5 rounded-xl border border-purple-100 dark:border-purple-900/40">
+            <span className="flex items-center gap-1.5 font-medium text-purple-700 dark:text-purple-300">
+              <Info className="w-4 h-4" />
+              اضغط على أي صنف محضر لعرض مقادير وخامات الوصفة بالكامل والكميات المطلوبة لتحضيرها والوجبات المباعة المرتبطة بها
+            </span>
+            <span className="text-[11px] text-purple-600 dark:text-purple-400">
+              {expandedPrepId ? 'انقر مرة أخرى لإغلاق التفاصيل' : 'انقر على الصف للتوسيع'}
+            </span>
+          </div>
+
           <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xl">
             <table className="w-full text-xs">
               <thead className="bg-slate-900 text-white">
@@ -752,10 +816,12 @@ export const ForecastTab: React.FC<ForecastTabProps> = ({
                   <th className="p-2.5 text-center w-28 bg-purple-950 text-purple-300 font-bold">الباتشات المطلوب إنتاجها</th>
                   <th className="p-2.5 text-center w-28">الإنتاج الفعلي المتوقع</th>
                   <th className="p-2.5 text-center w-28">تكلفة الباتشات</th>
+                  <th className="p-2.5 text-center w-16">التفاصيل</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-700 bg-white dark:bg-slate-800">
                 {prepPlan.map((p, idx) => {
+                  const isExpanded = expandedPrepId === p.id;
                   let displayDemand = `${nf(p.directDemand, 0)} جم`;
                   let displayOutput = `${nf(p.expectedOutput, 0)} جم`;
                   if (p.directDemand >= 1000) {
@@ -766,35 +832,185 @@ export const ForecastTab: React.FC<ForecastTabProps> = ({
                   }
 
                   return (
-                    <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                      <td className="p-2.5 text-center font-bold text-slate-400">{idx + 1}</td>
-                      <td className="p-2.5 font-bold text-slate-800 dark:text-slate-200 text-right">
-                        {p.prepItem.name}
-                        {p.recipe && (
-                          <span className="block text-[10px] text-slate-400 font-normal mt-0.5">
-                            {p.recipe.name}
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-2.5 text-center font-mono font-bold text-blue-600 dark:text-blue-400">
-                        {p.prepItem.recipeCode}
-                      </td>
-                      <td className="p-2.5 text-center font-semibold text-slate-700 dark:text-slate-300">
-                        {p.prepItem.batchSize >= 1000 ? `${(p.prepItem.batchSize / 1000).toFixed(1)} كجم` : `${nf(p.prepItem.batchSize)} جم`}
-                      </td>
-                      <td className="p-2.5 text-center font-mono font-semibold text-slate-900 dark:text-white">
-                        {displayDemand}
-                      </td>
-                      <td className="p-2.5 text-center font-mono font-bold text-purple-600 dark:text-purple-400 bg-purple-50/50 dark:bg-purple-950/20 text-sm">
-                        {nf(p.suggestedBatches, 1)}
-                      </td>
-                      <td className="p-2.5 text-center font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                        {displayOutput}
-                      </td>
-                      <td className="p-2.5 text-center font-mono font-bold text-slate-900 dark:text-white">
-                        {money(p.batchCost)}
-                      </td>
-                    </tr>
+                    <React.Fragment key={p.id}>
+                      <tr
+                        onClick={() => setExpandedPrepId(isExpanded ? null : p.id)}
+                        className={`cursor-pointer transition-colors ${
+                          isExpanded
+                            ? 'bg-purple-50 dark:bg-purple-950/40 border-l-4 border-l-purple-600'
+                            : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'
+                        }`}
+                      >
+                        <td className="p-2.5 text-center font-bold text-slate-400">{idx + 1}</td>
+                        <td className="p-2.5 font-bold text-slate-800 dark:text-slate-200 text-right">
+                          <div className="flex items-center gap-2">
+                            <span>{p.prepItem.name}</span>
+                            {p.prepItem.name.includes('كينوا') && (
+                              <span className="px-1.5 py-0.5 text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 rounded font-semibold">
+                                60 جم/سلطة
+                              </span>
+                            )}
+                            {p.prepItem.name.includes('كاساديا') && p.prepItem.name.includes('تتبيل') && (
+                              <span className="px-1.5 py-0.5 text-[10px] bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 rounded font-semibold">
+                                15 جم كاساديا + شاورما
+                              </span>
+                            )}
+                          </div>
+                          {p.recipe && (
+                            <span className="block text-[10px] text-slate-400 font-normal mt-0.5">
+                              {p.recipe.name}
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-2.5 text-center font-mono font-bold text-blue-600 dark:text-blue-400">
+                          {p.prepItem.recipeCode}
+                        </td>
+                        <td className="p-2.5 text-center font-semibold text-slate-700 dark:text-slate-300">
+                          {p.prepItem.batchSize >= 1000 ? `${(p.prepItem.batchSize / 1000).toFixed(1)} كجم` : `${nf(p.prepItem.batchSize)} جم`}
+                        </td>
+                        <td className="p-2.5 text-center font-mono font-semibold text-slate-900 dark:text-white">
+                          {displayDemand}
+                        </td>
+                        <td className="p-2.5 text-center font-mono font-bold text-purple-600 dark:text-purple-400 bg-purple-50/50 dark:bg-purple-950/20 text-sm">
+                          {nf(p.suggestedBatches, 1)}
+                        </td>
+                        <td className="p-2.5 text-center font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                          {displayOutput}
+                        </td>
+                        <td className="p-2.5 text-center font-mono font-bold text-slate-900 dark:text-white">
+                          {money(p.batchCost)}
+                        </td>
+                        <td className="p-2.5 text-center">
+                          <button
+                            type="button"
+                            aria-label="Toggle prep recipe details"
+                            className="p-1 rounded-lg text-purple-600 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition"
+                          >
+                            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                          </button>
+                        </td>
+                      </tr>
+
+                      {/* EXPANDED RECIPE QUANTITIES & LINKED SALES DISHES */}
+                      {isExpanded && (
+                        <tr className="bg-slate-50/80 dark:bg-slate-900/60">
+                          <td colSpan={9} className="p-4 border-t border-purple-100 dark:border-purple-900/40">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                              {/* 1. Recipe Ingredients & Quantities to Prep */}
+                              <div className="bg-white dark:bg-slate-800 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                                <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-slate-100 dark:border-slate-700">
+                                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                                    <UtensilsCrossed className="w-4 h-4 text-purple-600" />
+                                    <span>مقادير وخامات الوصفة للتحضير (Recipe Breakdown)</span>
+                                  </div>
+                                  <span className="text-[11px] font-mono text-purple-600 dark:text-purple-400 font-semibold">
+                                    {nf(p.suggestedBatches, 1)} باتش معتمد
+                                  </span>
+                                </div>
+
+                                {p.subIngredients.length === 0 ? (
+                                  <p className="text-xs text-slate-400 py-2 text-center">
+                                    لا توجد تفاصيل خامات مسجلة لهذه الوصفة
+                                  </p>
+                                ) : (
+                                  <table className="w-full text-[11px]">
+                                    <thead>
+                                      <tr className="text-slate-400 border-b border-slate-100 dark:border-slate-700">
+                                        <th className="pb-1.5 text-right font-medium">الخامة</th>
+                                        <th className="pb-1.5 text-center font-medium">معيار الباتش</th>
+                                        <th className="pb-1.5 text-center font-bold text-purple-600 dark:text-purple-400">إجمالي المطلوب للتحضير</th>
+                                        <th className="pb-1.5 text-center font-medium">السعر</th>
+                                        <th className="pb-1.5 text-left font-medium">التكلفة</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                                      {p.subIngredients.map((si, sIdx) => (
+                                        <tr key={sIdx} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                                          <td className="py-1.5 font-medium text-slate-700 dark:text-slate-300">
+                                            {si.ing?.name || 'خامة'}
+                                          </td>
+                                          <td className="py-1.5 text-center text-slate-500">
+                                            {nf(si.qtyPerBatch, 2)} {si.ing?.unit || 'وحدة'}
+                                          </td>
+                                          <td className="py-1.5 text-center font-bold text-purple-600 dark:text-purple-400 bg-purple-50/50 dark:bg-purple-950/30">
+                                            {nf(si.totalQtyNeeded, 2)} {si.ing?.unit || 'وحدة'}
+                                          </td>
+                                          <td className="py-1.5 text-center font-mono text-slate-500">
+                                            {money(si.ing?.price || 0)}
+                                          </td>
+                                          <td className="py-1.5 text-left font-mono font-semibold text-slate-800 dark:text-slate-200">
+                                            {money(si.totalCost)}
+                                          </td>
+                                        </tr>
+                                      ))}
+                                      <tr className="font-bold border-t-2 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/40">
+                                        <td colSpan={4} className="py-1.5 text-right text-slate-700 dark:text-slate-200">
+                                          إجمالي تكلفة خامات التحضير
+                                        </td>
+                                        <td className="py-1.5 text-left font-mono text-purple-600 dark:text-purple-400">
+                                          {money(p.batchCost)}
+                                        </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                )}
+                              </div>
+
+                              {/* 2. Linked Sold Dishes Driving this Prep Item Demand */}
+                              <div className="bg-white dark:bg-slate-800 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                                <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-slate-100 dark:border-slate-700">
+                                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                                    <ShoppingCart className="w-4 h-4 text-emerald-600" />
+                                    <span>الأصناف المباعة المرتبطة بالطلب (Linked Sold Dishes)</span>
+                                  </div>
+                                  <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
+                                    {p.linkedDishes.length} أصناف مباعة
+                                  </span>
+                                </div>
+
+                                {p.linkedDishes.length === 0 ? (
+                                  <div className="text-center py-4 text-slate-400 text-xs">
+                                    لا توجد مبيعات متوقعة مرتبطة مباشرة بهذا الصنف حالياً
+                                  </div>
+                                ) : (
+                                  <table className="w-full text-[11px]">
+                                    <thead>
+                                      <tr className="text-slate-400 border-b border-slate-100 dark:border-slate-700">
+                                        <th className="pb-1.5 text-right font-medium">الوجبة المباعة</th>
+                                        <th className="pb-1.5 text-center font-medium">المبيعات المتوقعة</th>
+                                        <th className="pb-1.5 text-center font-medium">المعيار بالوجبة</th>
+                                        <th className="pb-1.5 text-left font-bold text-emerald-600 dark:text-emerald-400">إجمالي الطلب</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                                      {p.linkedDishes.map((ld, lIdx) => (
+                                        <tr key={lIdx} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                                          <td className="py-1.5 text-right font-medium text-slate-700 dark:text-slate-300">
+                                            {ld.name}
+                                            <span className="block text-[10px] text-slate-400 font-mono">
+                                              {ld.code} | {ld.group}
+                                            </span>
+                                          </td>
+                                          <td className="py-1.5 text-center font-mono font-semibold text-slate-700 dark:text-slate-300">
+                                            {nf(ld.qty, 0)} وجبة
+                                          </td>
+                                          <td className="py-1.5 text-center font-mono text-slate-600 dark:text-slate-400">
+                                            {ld.portionStd >= 1 ? `${nf(ld.portionStd, 0)} جم` : `${(ld.portionStd * 1000).toFixed(0)} جم`}
+                                          </td>
+                                          <td className="py-1.5 text-left font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                                            {ld.totalDemand >= 1000 ? `${(ld.totalDemand / 1000).toFixed(2)} كجم` : `${nf(ld.totalDemand, 0)} جم`}
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   );
                 })}
               </tbody>

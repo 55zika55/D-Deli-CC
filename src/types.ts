@@ -237,3 +237,41 @@ export interface MenuEngineeringSummary {
   dogsQty: number;
 }
 
+export interface PrepLinkedDish {
+  dishCode: string;
+  dishName: string;
+  dishGroup: string;
+  soldQty: number;
+  portionStd: number;
+  totalDemand: number;
+}
+
+export interface PrepSubIngredientDetail {
+  ingId: string;
+  ingName: string;
+  unit: string;
+  unitPrice: number;
+  qtyPerBatch: number;
+  totalQtyNeeded: number;
+  totalCost: number;
+}
+
+export interface PrepProductionLink {
+  id: string;
+  prepItem: PrepItem;
+  ingredient?: Ingredient;
+  recipe?: Recipe;
+  linkedDishes: PrepLinkedDish[];
+  totalDemand: number;
+  batchSize: number;
+  batchesExact: number;
+  batchesSuggested: number;
+  expectedOutput: number;
+  postedBatches: number;
+  postedQty: number;
+  remainingBatches: number;
+  subIngredients: PrepSubIngredientDetail[];
+  batchCost: number;
+  totalProductionCost: number;
+}
+

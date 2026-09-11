@@ -34,12 +34,14 @@ interface MenuEngineeringTabProps {
   state: AppState;
   currentLang: Language;
   onNavigateRecipe?: (recipeId: string) => void;
+  onOpenReportsPrint?: (report: 'menu_eng') => void;
 }
 
 export const MenuEngineeringTab: React.FC<MenuEngineeringTabProps> = ({
   state,
   currentLang,
-  onNavigateRecipe
+  onNavigateRecipe,
+  onOpenReportsPrint
 }) => {
   const isAr = currentLang === 'ar';
 
@@ -141,7 +143,11 @@ export const MenuEngineeringTab: React.FC<MenuEngineeringTabProps> = ({
 
   // Print function
   const handlePrint = () => {
-    window.print();
+    if (onOpenReportsPrint) {
+      onOpenReportsPrint('menu_eng');
+    } else {
+      window.print();
+    }
   };
 
   return (

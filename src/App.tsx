@@ -36,6 +36,7 @@ import { AuditTab } from './components/AuditTab';
 import { HelpTab } from './components/HelpTab';
 import { PrintRecipeModal } from './components/PrintRecipeModal';
 import { DiagnosticReportModal } from './components/DiagnosticReportModal';
+import { ReportsPrintModal, ReportType } from './components/ReportsPrintModal';
 
 // Icons
 import { 
@@ -95,17 +96,25 @@ export const App: React.FC = () => {
             return canonicalIng;
           });
 
+          // Version 5 migration: Wipe old sales and load the official August 2026 sales report
+          if (!parsed.version || parsed.version < 5) {
+            parsed.version = 5;
+            parsed.sales = INITIAL_STATE.sales;
+            parsed.dFrom = "2026-08-01";
+            parsed.dTo = "2026-08-31";
+          }
+
           // Always ensure latest clean recipe definitions (including the 5 exact pizzas from the image)
           parsed.recipes = INITIAL_STATE.recipes;
 
           // Update sales recipe linkages and pizza items
           const recipeCodeMap = new Map<string, string>(parsed.recipes.map((r: Recipe) => [r.code, r.id]));
           const pizzaSkuMap: Record<string, { name: string; recipeCode: string; price: number }> = {
-            'SKU140': { name: 'بيتزا تشيكن رانش', recipeCode: 'RCP-140', price: 125.00 },
-            'SKU116': { name: 'بيتزا بيبروني', recipeCode: 'RCP-127', price: 85.00 },
-            'SKU117': { name: 'بيتزا مارجريتا', recipeCode: 'RCP-126', price: 90.00 },
-            'SKU113': { name: 'بيتزا تشيكن ماشروم', recipeCode: 'RCP-128', price: 105.00 },
-            'SKU118': { name: 'بيتزا خضار', recipeCode: 'RCP-129', price: 80.00 },
+            'SKU140': { name: 'بيتزا تشيكن رانش (Fried Chicken Ranch)', recipeCode: 'RCP-140', price: 125.00 },
+            'SKU116': { name: 'بيتزا بيبروني (Pepperoni)', recipeCode: 'RCP-127', price: 85.00 },
+            'SKU117': { name: 'بيتزا مارجريتا (Margarita)', recipeCode: 'RCP-126', price: 90.00 },
+            'SKU113': { name: 'بيتزا تشيكن ماشروم (Chicken Mushroom)', recipeCode: 'RCP-128', price: 105.00 },
+            'SKU118': { name: 'بيتزا خضار (Vegeterian)', recipeCode: 'RCP-129', price: 80.00 },
           };
 
           parsed.sales.forEach((s: SaleItem) => {
@@ -118,12 +127,6 @@ export const App: React.FC = () => {
             }
             if (s.recipeCode && recipeCodeMap.has(s.recipeCode)) {
               s.recipeId = recipeCodeMap.get(s.recipeCode)!;
-            }
-            if (s.code === 'SKU155') {
-              s.name = "حزمة قطعة لحم برجر إضافية";
-            }
-            if (s.code === 'SKU107' && (s.price === 135 || !s.price)) {
-              s.price = 110.00;
             }
           });
 
@@ -175,6 +178,9 @@ export const App: React.FC = () => {
 
   // 6. System Diagnostics Modal State
   const [showDiagnostics, setShowDiagnostics] = useState<boolean>(false);
+
+  // 7. Comprehensive Reports & PDF Print Modal State
+  const [reportsPrintModalReport, setReportsPrintModalReport] = useState<ReportType | null>(null);
 
   // Auto-save state to localStorage
   const saveStateToStorage = (newState: AppState) => {
@@ -297,6 +303,23 @@ export const App: React.FC = () => {
       return updated;
     });
     logAudit('delete_sale_item', `Deleted sales item at index ${index}`);
+  };
+
+  const handleResetToAugustSales = () => {
+    if (window.confirm("هل أنت متأكد من رغبتك في استعادة مبيعات تقرير شهر أغسطس 2026 الرسمية وحذف أي أصناف أو مبيعات قديمة؟")) {
+      setState(prev => {
+        const updated = {
+          ...prev,
+          version: 5,
+          sales: INITIAL_STATE.sales,
+          dFrom: "2026-08-01",
+          dTo: "2026-08-31"
+        };
+        saveStateToStorage(updated);
+        return updated;
+      });
+      logAudit('reset_august_sales', 'استعادة مبيعات تقرير أغسطس 2026 الرسمية وحذف البيانات القديمة (7,683 صنف - 569,730 ج.م)');
+    }
   };
 
   // Recipe Handlers
@@ -869,6 +892,7 @@ export const App: React.FC = () => {
         onLanguageChange={handleLanguageChange}
         onAudit={logAudit}
         onOpenDiagnostics={() => setShowDiagnostics(true)}
+        onOpenReportsPrint={(report) => setReportsPrintModalReport(report || 'summary')}
       />
 
       {/* 2. Login Overlay if not authenticated */}
@@ -925,6 +949,7 @@ export const App: React.FC = () => {
             onAddSale={handleAddSale}
             onDeleteSale={handleDeleteSale}
             onOpenMenuEngineering={() => setActiveTab('menu_eng')}
+            onResetToAugustSales={handleResetToAugustSales}
           />
         )}
 
@@ -985,6 +1010,7 @@ export const App: React.FC = () => {
             canEdit={userPerms.canEditInventory}
             onUpdateInventoryCount={handleUpdateInventoryCount}
             onBatchUpdateEndCounts={handleBatchUpdateEndCounts}
+            onOpenReportsPrint={(report) => setReportsPrintModalReport(report || 'summary')}
           />
         )}
 
@@ -1016,6 +1042,7 @@ export const App: React.FC = () => {
             currentLang={currentLang}
             canEdit={userPerms.canRecordTransactions}
             onPostProductionBatch={handlePostProduction}
+            onOpenReportsPrint={(report) => setReportsPrintModalReport(report || 'forecast')}
           />
         )}
 
@@ -1023,6 +1050,7 @@ export const App: React.FC = () => {
           <MenuEngineeringTab
             state={state}
             currentLang={currentLang}
+            onOpenReportsPrint={(report) => setReportsPrintModalReport(report || 'menu_eng')}
           />
         )}
 
@@ -1090,6 +1118,17 @@ export const App: React.FC = () => {
             logAudit('system_repair', `Applied repairs: ${logSummary.join(' | ')}`);
           }}
           onAudit={logAudit}
+        />
+      )}
+
+      {/* 7. Comprehensive Reports & PDF Print Center Modal */}
+      {reportsPrintModalReport !== null && (
+        <ReportsPrintModal
+          state={state}
+          metrics={metrics}
+          currentLang={currentLang}
+          initialReport={reportsPrintModalReport}
+          onClose={() => setReportsPrintModalReport(null)}
         />
       )}
     </div>

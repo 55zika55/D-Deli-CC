@@ -3,6 +3,7 @@ import { AppState, Recipe, Language, Ingredient } from '../types';
 import { TRANSLATIONS } from '../translations';
 import { num, money, getRecipeUnitCost, getRecipeAvgSellingPrice } from '../utils/calculations';
 import { exportRecipesExcel, exportSingleRecipeExcel, downloadXLSX } from '../utils/excel';
+import { downloadElementAsPDF } from '../utils/pdfExport';
 import { 
   Printer, 
   X, 
@@ -19,7 +20,8 @@ import {
   Calendar,
   Check,
   Eye,
-  Settings2
+  Settings2,
+  Loader2
 } from 'lucide-react';
 
 interface PrintRecipeModalProps {
@@ -587,29 +589,94 @@ export const PrintRecipeModal: React.FC<PrintRecipeModalProps> = ({
 </html>`;
   };
 
+  // Direct High-Resolution PDF Download
+  const handleDownloadPDF = async () => {
+    const scrollContainer = document.querySelector('.recipe-print-scroll-area') as HTMLElement;
+    if (!scrollContainer) {
+      handleInstantPrint();
+      return;
+    }
+    setIsPrinting(true);
+    setStatusMessage(isAr ? 'جاري تحويل ومعالجة بطاقات الوصفات إلى ملف PDF عالي الجودة...' : 'Generating PDF...');
+    try {
+      await downloadElementAsPDF(scrollContainer, {
+        orientation: 'portrait',
+        filename: `D-Deli_Recipe_Cards_${filteredRecipes.length}_${new Date().toISOString().slice(0, 10)}`,
+        scale: 2,
+        onProgress: setStatusMessage
+      });
+      setStatusMessage(isAr ? '✓ تم تنزيل ملف PDF بنجاح!' : '✓ PDF downloaded successfully!');
+      setTimeout(() => setStatusMessage(null), 3500);
+    } catch (err) {
+      console.error('PDF export failed:', err);
+      setStatusMessage(isAr ? 'تعذر التوليد المباشر، جاري استدعاء نافذة الطباعة كبديل...' : 'Fallback to print dialog...');
+      setTimeout(() => handleInstantPrint(), 1000);
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
   // 1. Direct, instant native print trigger
   const handleInstantPrint = () => {
     setIsPrinting(true);
     setStatusMessage(isAr ? 'جاري فتح نافذة الطباعة الفورية...' : 'Opening print dialog...');
     
-    // Add active print class so stylesheet isolates recipe cards
-    document.body.classList.add('printing-recipes');
+    try {
+      const htmlContent = generatePrintableHTML();
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      iframe.style.zIndex = '-9999';
+      document.body.appendChild(iframe);
 
-    setTimeout(() => {
-      try {
+      const doc = iframe.contentWindow?.document;
+      if (doc) {
+        doc.open();
+        doc.write(htmlContent);
+        doc.close();
+
+        setTimeout(() => {
+          try {
+            iframe.contentWindow?.focus();
+            iframe.contentWindow?.print();
+            setStatusMessage(isAr ? '✓ تم إرسال أمر الطباعة بنجاح' : '✓ Print command sent successfully');
+          } catch (printErr) {
+            console.warn('Iframe print error, attempting window.print:', printErr);
+            document.body.classList.add('printing-recipes');
+            window.print();
+            setTimeout(() => document.body.classList.remove('printing-recipes'), 1000);
+          } finally {
+            setTimeout(() => {
+              if (document.body.contains(iframe)) {
+                document.body.removeChild(iframe);
+              }
+              setIsPrinting(false);
+              setTimeout(() => setStatusMessage(null), 3500);
+            }, 2000);
+          }
+        }, 300);
+      } else {
+        document.body.classList.add('printing-recipes');
         window.print();
-        setStatusMessage(isAr ? '✓ تم إرسال أمر الطباعة بنجاح' : '✓ Print command completed');
-      } catch (err) {
-        console.error('Window print failed:', err);
-        setStatusMessage(isAr ? 'يرجى استخدام اختصار المتصفح (Ctrl + P)' : 'Please use Ctrl + P');
-      } finally {
         setTimeout(() => {
           document.body.classList.remove('printing-recipes');
           setIsPrinting(false);
           setTimeout(() => setStatusMessage(null), 3500);
-        }, 800);
+        }, 1000);
       }
-    }, 100);
+    } catch (err) {
+      console.error('Print generation failed:', err);
+      document.body.classList.add('printing-recipes');
+      window.print();
+      setTimeout(() => {
+        document.body.classList.remove('printing-recipes');
+        setIsPrinting(false);
+      }, 1000);
+    }
   };
 
   // 2. Open printable view in a clean new tab (with interactive settings)
@@ -741,6 +808,17 @@ export const PrintRecipeModal: React.FC<PrintRecipeModalProps> = ({
             {/* Main Action Buttons */}
             <div className="flex flex-wrap items-center gap-2">
               
+              {/* Direct PDF Download Button */}
+              <button
+                onClick={handleDownloadPDF}
+                disabled={isPrinting || filteredRecipes.length === 0}
+                className="bg-red-600 hover:bg-red-500 active:scale-95 disabled:opacity-50 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg transition flex items-center gap-1.5 cursor-pointer"
+                title={isAr ? 'تنزيل ملف PDF مباشر عالي الجودة' : 'Download Direct PDF'}
+              >
+                {isPrinting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                <span>{isAr ? '📥 تنزيل PDF مباشر' : 'Download PDF'}</span>
+              </button>
+
               {/* Instant Direct Print Button */}
               <button
                 onClick={handleInstantPrint}
@@ -749,7 +827,7 @@ export const PrintRecipeModal: React.FC<PrintRecipeModalProps> = ({
                 title={isAr ? 'طباعة فورية مباشرة عبر نافذة الطابعة' : 'Instant Print'}
               >
                 <Printer className="w-4 h-4" />
-                <span>{isPrinting ? (isAr ? 'جاري التحضير...' : 'Printing...') : (isAr ? 'طباعة فورية (Print / PDF)' : 'Print / PDF')}</span>
+                <span>{isPrinting ? (isAr ? 'جاري التحضير...' : 'Printing...') : (isAr ? '🖨️ نافذة الطباعة' : 'Print Dialog')}</span>
               </button>
 
               {/* Open in New Window Button */}

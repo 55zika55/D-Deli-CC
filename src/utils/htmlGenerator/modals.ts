@@ -25,9 +25,20 @@ function updateThemeButton(theme){
 // ==================== Collapsible Categories ====================
 let collapsedCategories = {};
 
-function toggleCatGroup(tableId, catName){
+function toggleCatGroup(tableIdOrKey, catName){
+  if(catName === undefined){
+    const groupKey = tableIdOrKey;
+    collapsedCategories[groupKey] = !collapsedCategories[groupKey];
+    const isHidden = !!collapsedCategories[groupKey];
+    const rows = document.querySelectorAll('.' + groupKey);
+    rows.forEach(r => { r.style.display = isHidden ? 'none' : ''; });
+    const icon = document.getElementById('icon_' + groupKey);
+    if(icon) icon.textContent = isHidden ? '▶' : '▼';
+    return;
+  }
+  const tableId = tableIdOrKey;
   collapsedCategories[catName] = !collapsedCategories[catName];
-  const isHidden = collapsedCategories[catName];
+  const isHidden = !!collapsedCategories[catName];
   const rows = document.querySelectorAll('#' + tableId + ' tbody tr[data-cat="' + catName + '"]');
   rows.forEach(r => {
     r.style.display = isHidden ? 'none' : '';
@@ -39,6 +50,18 @@ function toggleCatGroup(tableId, catName){
 }
 
 function collapseAllCategories(tableId){
+  if(!tableId){
+    document.querySelectorAll('.cat-child-row').forEach(r => { r.style.display = 'none'; });
+    document.querySelectorAll('.cat-hdr-row').forEach(hdr => {
+      const icon = hdr.querySelector('.cat-toggle-icon');
+      if(icon && icon.id){
+        const groupKey = icon.id.replace('icon_', '');
+        collapsedCategories[groupKey] = true;
+        icon.textContent = '▶';
+      }
+    });
+    return;
+  }
   const rows = document.querySelectorAll('#' + tableId + ' tbody tr[data-cat]');
   rows.forEach(r => {
     const c = r.getAttribute('data-cat');
@@ -51,6 +74,18 @@ function collapseAllCategories(tableId){
 }
 
 function expandAllCategories(tableId){
+  if(!tableId){
+    document.querySelectorAll('.cat-child-row').forEach(r => { r.style.display = ''; });
+    document.querySelectorAll('.cat-hdr-row').forEach(hdr => {
+      const icon = hdr.querySelector('.cat-toggle-icon');
+      if(icon && icon.id){
+        const groupKey = icon.id.replace('icon_', '');
+        collapsedCategories[groupKey] = false;
+        icon.textContent = '▼';
+      }
+    });
+    return;
+  }
   const rows = document.querySelectorAll('#' + tableId + ' tbody tr[data-cat]');
   rows.forEach(r => {
     const c = r.getAttribute('data-cat');
@@ -60,6 +95,19 @@ function expandAllCategories(tableId){
     }
   });
   document.querySelectorAll('#' + tableId + ' .cat-toggle-icon').forEach(ic => ic.textContent = '▼');
+}
+
+function filterSummaryRows(keyword){
+  const q = (keyword || '').trim().toLowerCase();
+  const rows = document.querySelectorAll('.cat-child-row');
+  rows.forEach(r => {
+    const text = r.textContent.toLowerCase();
+    if(!q || text.includes(q)){
+      r.style.display = '';
+    } else {
+      r.style.display = 'none';
+    }
+  });
 }
 
 // ==================== POS Receipt & A4 Print Engine ====================

@@ -8,8 +8,13 @@ import {
   Ingredient, 
   SaleItem,
   ExpenseRecord,
-  ExpenseCategory
+  ExpenseCategory,
+  PrepItem,
+  PrepProductionLink,
+  PrepLinkedDish,
+  PrepSubIngredientDetail
 } from '../types';
+import { PREP_ITEMS } from '../initialData';
 
 export const DAY_MS = 86400000;
 
@@ -52,8 +57,22 @@ export function computeMetrics(state: AppState): ComputedMetrics {
   });
 
   // Raw theoretical demand for each ingredient
+  // Raw theoretical demand for each ingredient strictly from ATTACHED SOLD DISH RECIPES ONLY
+  // Prep sub-recipes are excluded from raw stock deduction until net yield is finalized
   const raw: number[] = new Array(ingCount).fill(0);
   state.recipes.forEach(r => {
+    // Exclude preparation sub-recipes from sales deduction
+    const isPrepRecipe = r.code.startsWith('RCP-13') || 
+                         r.code.startsWith('RCP-147') || 
+                         r.code.startsWith('RCP-148') || 
+                         r.code.startsWith('RCP-149') || 
+                         r.code.startsWith('RCP-150') || 
+                         r.code.startsWith('RCP-151') ||
+                         r.name.includes('تصنيع') ||
+                         r.name.includes('تجهيز') ||
+                         r.name.includes('تتبيله صدور');
+    if (isPrepRecipe) return;
+
     const q = rq[r.id] || 0;
     if (!q) return;
     r.items.forEach(it => {
@@ -94,11 +113,13 @@ export function computeMetrics(state: AppState): ComputedMetrics {
   });
 
   // Actual consumption formula:
-  // Actual = Beg + Recv + Tin + Prod_In - Tout - Waste - Prod_Consume - End
+  // Note: Production consume from prep sub-recipes is paused per user directive
+  // ("ايقاف رسبي التصنيعات من التخصيم لحين الوقوف علي نسبة الصافي بعد عمل التنيعات")
+  // Actual consumption strictly reflects direct inventory movement (Beg + Recv + Tin - Tout - Waste - End)
   const actual: number[] = state.ing.map((_, i) => {
     const beg = num(state.beg[i]);
     const end = num(state.end[i]);
-    return beg + recv[i] + tin[i] + production_in[i] - tout[i] - waste[i] - production_consume[i] - end;
+    return beg + recv[i] + tin[i] - tout[i] - waste[i] - end;
   });
 
   // Variance = Adjusted Theoretical - Actual
@@ -514,4 +535,125 @@ export function computeExpenseMetrics(
     dailyTrend
   };
 }
+
+export function getPrepProductionLinks(state: AppState, metrics?: ComputedMetrics): PrepProductionLink[] {
+  const m = metrics || computeMetrics(state);
+  const ingMap = new Map(state.ing.map(g => [g.name, g]));
+  const ingById = new Map(state.ing.map(g => [g.id, g]));
+  const recipeByCode = new Map(state.recipes.map(r => [r.code, r]));
+  const recipeById = new Map(state.recipes.map(r => [r.id, r]));
+
+  // Build a lookup of sales demand by recipeId
+  const salesQtyByRecipeId: Record<string, number> = {};
+  const salesByRecipeId: Record<string, SaleItem> = {};
+  state.sales.forEach(s => {
+    if (s.recipeId) {
+      salesQtyByRecipeId[s.recipeId] = (salesQtyByRecipeId[s.recipeId] || 0) + num(s.qty);
+      salesByRecipeId[s.recipeId] = s;
+    }
+  });
+
+  return PREP_ITEMS.map((p, idx) => {
+    let ing = ingMap.get(p.name);
+    if (!ing) {
+      if (p.name.includes('عجين بيتزا')) ing = ingMap.get('عجين بيتزا مخمر جاهز') || ingMap.get('بورشن عجين بيتزا');
+      else if (p.name.includes('صلصه طماطم')) ing = ingMap.get('صلصه طماطم بيتزا') || ingMap.get('صلصه طماطم');
+      else if (p.name.includes('كينوا')) ing = ingMap.get('صوص ليمون الكينوا سالاد');
+      else if (p.name.includes('كاساديا') && p.name.includes('تتبيل')) ing = ingMap.get('تتبيله بعد التسوية دجاج كاساديا') || ingMap.get('تتبيله بعد التسويه دجاج كاساديا');
+    }
+
+    const recipe = recipeByCode.get(p.recipeCode) || recipeById.get(p.recipeCode);
+
+    // Find all menu recipes that use this prep item or its ingredient ID or aliases
+    const linkedDishes: PrepLinkedDish[] = [];
+    state.recipes.forEach(r => {
+      const soldQty = salesQtyByRecipeId[r.id] || 0;
+      if (soldQty <= 0) return;
+      const sale = salesByRecipeId[r.id];
+
+      // Check items in this recipe
+      r.items.forEach(it => {
+        let isMatch = false;
+        if (ing && it.ingredientId === ing.id) isMatch = true;
+        else if (it.ing === p.name) isMatch = true;
+        else if (p.name.includes('عجين بيتزا') && (it.ing === 'بورشن عجين بيتزا' || it.ing === 'عجين بيتزا مخمر جاهز')) isMatch = true;
+        else if (p.name.includes('صلصه طماطم') && (it.ing === 'صلصه طماطم' || it.ing === 'صلصه طماطم بيتزا')) isMatch = true;
+        else if (p.name.includes('كاساديا') && p.name.includes('تتبيل') && it.ing.includes('كاساديا') && it.ing.includes('تتبيل')) isMatch = true;
+        else if (p.name.includes('كينوا') && it.ing.includes('كينوا') && it.ing.includes('صوص')) isMatch = true;
+
+        if (isMatch) {
+          const portionStd = num(it.std);
+          linkedDishes.push({
+            dishCode: sale ? sale.code : r.code,
+            dishName: sale ? sale.name : r.name,
+            dishGroup: sale ? sale.group : 'Menu',
+            soldQty,
+            portionStd,
+            totalDemand: soldQty * portionStd
+          });
+        }
+      });
+    });
+
+    // Total theoretical demand
+    const totalDemand = linkedDishes.reduce((sum, d) => sum + d.totalDemand, 0);
+    const batchSize = p.batchSize > 0 ? p.batchSize : 1000;
+    const batchesExact = totalDemand > 0 ? totalDemand / batchSize : 0;
+    const batchesSuggested = state.roundUp ? Math.ceil(batchesExact - 1e-9) : batchesExact;
+    const expectedOutput = batchesSuggested * batchSize;
+
+    // Check ledger for already posted batches in active period
+    const inPeriodLedger = state.ledger.filter(x => x.date >= state.dFrom && x.date <= state.dTo);
+    let postedQty = 0;
+    inPeriodLedger.forEach(x => {
+      if (x.type === 'production_in') {
+        if ((ing && x.ingredientId === ing.id) || x.reference === `PROD-${p.recipeCode}`) {
+          postedQty += num(x.qty);
+        }
+      }
+    });
+    const postedBatches = batchSize > 0 ? postedQty / batchSize : 0;
+    const remainingBatches = Math.max(0, batchesSuggested - postedBatches);
+
+    // Sub-ingredients breakdown
+    const subIngredients: PrepSubIngredientDetail[] = recipe ? recipe.items.map(it => {
+      const rawG = ingById.get(it.ingredientId) || ingMap.get(it.ing);
+      const qtyPerBatch = num(it.std);
+      const totalQtyNeeded = qtyPerBatch * batchesSuggested;
+      const unitPrice = rawG ? num(rawG.price) : 0;
+      return {
+        ingId: rawG ? rawG.id : it.ingredientId,
+        ingName: rawG ? rawG.name : it.ing,
+        unit: rawG ? rawG.unit : 'جرام',
+        unitPrice,
+        qtyPerBatch,
+        totalQtyNeeded,
+        totalCost: totalQtyNeeded * unitPrice
+      };
+    }) : [];
+
+    const batchCost = subIngredients.reduce((sum, si) => sum + (si.qtyPerBatch * si.unitPrice), 0);
+    const totalProductionCost = batchCost * batchesSuggested;
+
+    return {
+      id: `prep-link-${idx}`,
+      prepItem: p,
+      ingredient: ing,
+      recipe,
+      linkedDishes,
+      totalDemand,
+      batchSize,
+      batchesExact,
+      batchesSuggested,
+      expectedOutput,
+      postedBatches,
+      postedQty,
+      remainingBatches,
+      subIngredients,
+      batchCost,
+      totalProductionCost
+    };
+  });
+}
+
 

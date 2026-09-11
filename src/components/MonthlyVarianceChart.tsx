@@ -57,7 +57,7 @@ export const MonthlyVarianceChart: React.FC<MonthlyVarianceChartProps> = ({
   // Generate 6 months historical + live data
   const monthlyData = useMemo(() => {
     // Current period info
-    const liveSales = metrics.salesTotal > 0 ? metrics.salesTotal : 532200;
+    const liveSales = metrics.salesTotal > 0 ? metrics.salesTotal : 569730;
     const liveIdeal = metrics.idealCost > 0 ? metrics.idealCost : 221233;
     
     // If ending inventory has not been entered yet (liveActualCost is 0),

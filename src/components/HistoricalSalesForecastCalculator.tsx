@@ -55,7 +55,7 @@ export const HistoricalSalesForecastCalculator: React.FC<HistoricalSalesForecast
 
   // Live Current Period Sales
   const liveSales = useMemo(() => {
-    return metrics.salesTotal > 0 ? metrics.salesTotal : 532200;
+    return metrics.salesTotal > 0 ? metrics.salesTotal : 569730;
   }, [metrics.salesTotal]);
 
   // Historical 6-month sales baseline

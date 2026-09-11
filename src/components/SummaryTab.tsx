@@ -13,6 +13,7 @@ interface SummaryTabProps {
   canEdit: boolean;
   onUpdateInventoryCount: (index: number, field: 'beg' | 'end', value: number) => void;
   onBatchUpdateEndCounts?: (newEndCounts: number[]) => void;
+  onOpenReportsPrint?: (report: 'summary') => void;
 }
 
 export const SummaryTab: React.FC<SummaryTabProps> = ({
@@ -21,10 +22,12 @@ export const SummaryTab: React.FC<SummaryTabProps> = ({
   currentLang,
   canEdit,
   onUpdateInventoryCount,
-  onBatchUpdateEndCounts
+  onBatchUpdateEndCounts,
+  onOpenReportsPrint
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showCountModal, setShowCountModal] = useState(false);
+  const isAr = currentLang === 'ar';
   const t = (key: string) => TRANSLATIONS[currentLang]?.[key] || key;
 
   const filtered = state.ing.map((g, originalIndex) => ({ g, originalIndex })).filter(({ g }) => {
@@ -79,6 +82,17 @@ export const SummaryTab: React.FC<SummaryTabProps> = ({
               <ClipboardCheck className="w-4 h-4" />
               <span>📋 فورمة الجرد الفعلي</span>
             </button>
+
+            {onOpenReportsPrint && (
+              <button
+                onClick={() => onOpenReportsPrint('summary')}
+                className="flex items-center gap-1.5 bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow transition active:scale-95"
+                title="طباعة تقرير ملخص تكلفة الأغذية والمخزون وإصدار PDF"
+              >
+                <Printer className="w-4 h-4" />
+                <span>{isAr ? '🖨️ طباعة التقرير (PDF)' : 'Print (PDF)'}</span>
+              </button>
+            )}
 
             <button
               onClick={() => exportSummaryExcel(state, metrics, currentLang)}

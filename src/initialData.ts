@@ -41,6 +41,7 @@ export const ING_RAW: [string, string, number, number][] = [
   // 1 - دواجن وأسماك
   ["صدور فراخ مقطع شاورما", "جرام", 1, 0.22],
   ["صدور دجاج طازجة", "جرام", 1, 0.19],
+  ["صدور دجاج", "جرام", 1, 0.19],
   ["صدور فراخ جريل", "جرام", 1, 0.26],
   ["صدور دجاج سيزار سالاد", "جرام", 1, 0.26],
   ["صدور سيزار سالاد", "جرام", 1, 0.26],
@@ -182,7 +183,7 @@ export const ING_RAW: [string, string, number, number][] = [
   ["مسترده", "جرام", 5, 0.13],
   ["توابل الكبده", "جرام", 5, 0.15],
   ["تتبيله مع التسويه دجاج كاساديا", "جرام", 5, 0.08],
-  ["تتبيله بعد التسويه دجاج كاساديا", "جرام", 5, 0.08],
+  ["تتبيله بعد التسوية دجاج كاساديا", "جرام", 5, 0.08],
   ["صوص ديلي برجر المميز", "جرام", 5, 0.14],
   ["صوص المرشوم الفريش بالكريمة", "جرام", 5, 0.18],
 
@@ -209,6 +210,8 @@ export const ING_RAW: [string, string, number, number][] = [
   ["زعتر جاف", "جرام", 6, 0.08],
   ["زعتر خشن", "جرام", 6, 0.08],
   ["زعتر بودر", "جرام", 6, 0.08],
+  ["زعتر بدر", "جرام", 6, 0.08],
+  ["زعتر بدر (بودر)", "جرام", 6, 0.08],
   ["زعتر", "جرام", 6, 0.08],
   ["كمون بودر", "جرام", 6, 0.040],
   ["كمون ناعم", "جرام", 6, 0.040],
@@ -242,65 +245,81 @@ export const ING_RAW: [string, string, number, number][] = [
 ];
 
 export const SALES_RAW: [string, string, string, number, number, string][] = [
-  // Page 1 (Items 1 to 24)
-  ["SKU136", "مشروم برجر (Mushroom Burger)", "Burgers", 424, 165.00, "RCP-111"],
-  ["SKU139", "إضافة بطاطس مقلية", "Extra", 1553, 30.00, "RCP-201"],
-  ["SKU137", "تشيز برجر (Cheese Burger)", "Burgers", 280, 165.00, "RCP-112"],
-  ["SKU135", "كلاسيك برجر (Classic Burger)", "Burgers", 239, 150.00, "RCP-110"],
-  ["SKU192", "أومليت بالجبنة والمشروم", "Pita breakfast", 467, 75.00, "RCP-104"],
-  ["SKU202", "أومليت بالجبنة والبسطرمة", "Pita breakfast", 400, 75.00, "RCP-102"],
-  ["SKU104", "كاساديا دجاج وراب", "Hot Wraps", 179, 155.00, "RCP-116"],
-  ["SKU201", "أومليت بالجبنة والبيكون", "Pita breakfast", 332, 75.00, "RCP-103"],
-  ["SKU100", "سلطة دجاج سيزر", "Salads", 102, 165.00, "RCP-106"],
-  ["SKU106", "دجاج مقلي وراب", "Hot Wraps", 112, 145.00, "RCP-118"],
-  ["SKU191", "أومليت مخفوق", "Pita breakfast", 268, 60.00, "RCP-141"],
-  ["SKU103", "سلطة تونة", "Salads", 108, 140.00, "RCP-109"],
-  ["SKU190", "ساندوتش بطاطس مقلية بيتا", "Pita breakfast", 317, 45.00, "RCP-125"],
-  ["SKU155", "حزمة قطعة لحم برجر إضافية", "Extra", 170, 70.00, "RCP-202"],
-  ["SKU108", "شاورما دجاج لبناني", "Hot Wraps", 79, 150.00, "RCP-117"],
-  ["SKU197", "ساندوتش روست بيف بريسكت", "Cold sandwiches", 63, 170.00, "RCP-122"],
-  ["SKU195", "ساندوتش كبدة وسجق فينوس", "Tuesday", 135, 75.00, "RCP-195"],
-  ["SKU198", "ساندوتش دجاج سيزر بارد", "Cold sandwiches", 58, 160.00, "RCP-142"],
-  ["SKU132", "دانيش فواكه طازج", "Bakery of the day", 115, 60.00, "RCP-301"],
-  ["SKU199", "ساندوتش مكس جبن بارد", "Cold sandwiches", 43, 145.00, "RCP-123"],
-  ["SKU200", "خبز بني إضافي", "Extra", 614, 10.00, "RCP-205"],
-  ["SKU189", "ساندوتش فلافل بيتا", "Pita breakfast", 115, 45.00, "RCP-124"],
-  ["SKU101", "سلطة يونانية بالفيتا", "Salads", 53, 95.00, "RCP-107"],
-  ["SKU102", "سلطة بنجر وتفاح أخضر وذرة", "Salads", 58, 85.00, "RCP-105"],
-  ["SKU107", "سلطة كينوا (Quinoa Salad)", "Salads", 48, 110.00, "RCP-108"],
+  // 1. Burgers (Total Qty: 1,014 | Total: 163,465.00 EGP)
+  ["SKU136", "مشروم برجر (Mushroom Burger)", "Burgers", 456, 165.00, "RCP-111"],
+  ["SKU137", "تشيز برجر (Cheese Burger)", "Burgers", 299, 165.00, "RCP-112"],
+  ["SKU135", "كلاسيك برجر (Classic Burger)", "Burgers", 258, 150.00, "RCP-110"],
+  ["SKU188", "ماك أند تشيز برجر (Mac & cheese)", "Burgers", 1, 190.00, "RCP-145"],
 
-  // Page 2 (Items 25 to 51)
-  ["SKU127", "باتيه دجاج ومشروم", "Bakery of the day", 70, 65.00, "RCP-302"],
-  ["SKU119", "صندوق ميني ساندوتش 12 قطعة", "Mini Sandwich Box", 24, 185.00, "RCP-115"],
-  ["SKU130", "باتيه جبنة", "Bakery of the day", 79, 55.00, "RCP-303"],
-  ["SKU140", "بيتزا تشيكن رانش", "Pizza", 26, 125.00, "RCP-140"],
-  ["SKU109", "تونا ميلت وراب", "Hot Wraps", 23, 135.00, "RCP-143"],
-  ["SKU105", "تشيز ستيك وراب", "Hot Wraps", 15, 180.00, "RCP-144"],
-  ["SKU131", "باتيه شيكولاتة", "Bakery of the day", 47, 55.00, "RCP-304"],
-  ["SKU158", "جبنة مكس إضافية", "Extra", 85, 25.00, "RCP-203"],
-  ["SKU116", "بيتزا بيبروني", "Pizza", 24, 85.00, "RCP-127"],
-  ["SKU133", "شرائح إنجلش كيك", "Bakery of the day", 42, 45.00, "RCP-305"],
-  ["SKU157", "خبز تورتيا إضافي", "Extra", 73, 25.00, "RCP-206"],
-  ["SKU126", "كرواسون فرنسي", "Bakery of the day", 30, 55.00, "RCP-306"],
-  ["SKU151", "مشروم إضافي", "Extra", 59, 25.00, "RCP-204"],
-  ["SKU129", "باتيه بيبروني", "Bakery of the day", 23, 60.00, "RCP-307"],
-  ["SKU128", "باتيه بسطرمة", "Bakery of the day", 22, 60.00, "RCP-308"],
-  ["SKU117", "بيتزا مارجريتا", "Pizza", 9, 90.00, "RCP-126"],
-  ["SKU180", "صندوق ميني دانيش حلو 12 قطعة", "Mini Sandwich Box", 3, 240.00, "RCP-309"],
-  ["SKU153", "دجاج مشوي إضافي", "Extra", 10, 60.00, "RCP-207"],
-  ["SKU147", "صوص رانش", "Extra", 28, 20.00, "RCP-209"],
-  ["SKU113", "بيتزا تشيكن ماشروم", "Pizza", 5, 105.00, "RCP-128"],
-  ["SKU148", "شرائح شيدر", "Extra", 31, 15.00, "RCP-212"],
-  ["SKU118", "بيتزا خضار", "Pizza", 4, 80.00, "RCP-129"],
-  ["SKU181", "براونيز شيكولاتة بالكراميل", "Dessert", 3, 90.00, "RCP-310"],
-  ["SKU182", "تشيز كيك بالتوت الأزرق", "Dessert", 2, 125.00, "RCP-311"],
-  ["SKU188", "ماك أند تشيز برجر (Mac & Cheese)", "Burgers", 1, 190.00, "RCP-145"],
-  ["SKU144", "صوص باربيكيو", "Extra", 9, 20.00, "RCP-210"],
-  ["SKU152", "دجاج مقلي إضافي", "Extra", 2, 60.00, "RCP-208"],
+  // 2. Pita breakfast (Total Qty: 2,123 | Total: 140,490.00 EGP)
+  ["SKU192", "أومليت بالجبنة والمشروم (cheese omlette with mushroom)", "Pita breakfast", 530, 75.00, "RCP-104"],
+  ["SKU202", "أومليت بالجبنة والبسطرمة (cheese omlette with Pastrami)", "Pita breakfast", 426, 75.00, "RCP-102"],
+  ["SKU201", "أومليت بالجبنة والبيكون (cheese omlette with BACON)", "Pita breakfast", 400, 75.00, "RCP-103"],
+  ["SKU191", "أومليت مخفوق (Scrambled Omlette)", "Pita breakfast", 285, 60.00, "RCP-141"],
+  ["SKU190", "ساندوتش بطاطس مقلية بيتا (French fries sand)", "Pita breakfast", 358, 45.00, "RCP-125"],
+  ["SKU189", "ساندوتش فلافل بيتا (Falafel)", "Pita breakfast", 124, 45.00, "RCP-124"],
 
-  // Page 3 (Items 52 to 53)
-  ["SKU150", "شرائح بسطرمة", "Extra", 4, 30.00, "RCP-213"],
-  ["SKU143", "صوص سيزر", "Extra", 1, 25.00, "RCP-211"]
+  // 3. Extra (Total Qty: 2,908 | Total: 78,685.00 EGP)
+  ["SKU139", "إضافة بطاطس مقلية (French Fries)", "Extra", 1685, 30.00, "RCP-201"],
+  ["SKU155", "حزمة قطعة لحم برجر إضافية (Burger patty)", "Extra", 183, 70.00, "RCP-202"],
+  ["SKU200", "خبز بني إضافي (Brown Bread)", "Extra", 708, 10.00, "RCP-205"],
+  ["SKU158", "جبنة مكس إضافية (Mix Cheese)", "Extra", 91, 25.00, "RCP-203"],
+  ["SKU157", "خبز تورتيا إضافي (Tortilla bread)", "Extra", 85, 25.00, "RCP-206"],
+  ["SKU151", "مشروم إضافي (Mushroom)", "Extra", 64, 25.00, "RCP-204"],
+  ["SKU153", "دجاج مشوي إضافي (Grilled Chicken)", "Extra", 11, 60.00, "RCP-207"],
+  ["SKU147", "صوص رانش (Ranch sauce)", "Extra", 29, 20.00, "RCP-209"],
+  ["SKU148", "شرائح شيدر (Cheddar cheese slices)", "Extra", 34, 15.00, "RCP-212"],
+  ["SKU144", "صوص باربيكيو (Barbecue sauce)", "Extra", 10, 20.00, "RCP-210"],
+  ["SKU150", "شرائح بسطرمة (pastrami slices)", "Extra", 5, 30.00, "RCP-213"],
+  ["SKU152", "دجاج مقلي إضافي (Fried Chicken)", "Extra", 2, 60.00, "RCP-208"],
+  ["SKU143", "صوص سيزر (Caesar sauce)", "Extra", 1, 25.00, "RCP-211"],
+
+  // 4. Hot Wraps (Total Qty: 437 | Total: 66,060.00 EGP)
+  ["SKU104", "كاساديا دجاج وراب (Chicken Quesadilla Wrap)", "Hot Wraps", 196, 155.00, "RCP-116"],
+  ["SKU106", "دجاج مقلي وراب (Fried Chicken Wrap)", "Hot Wraps", 115, 145.00, "RCP-118"],
+  ["SKU108", "شاورما دجاج لبناني (Lebanese Shawarma Chicken Wrap)", "Hot Wraps", 88, 150.00, "RCP-117"],
+  ["SKU109", "تونا ميلت وراب (Tuna Melt Wrap)", "Hot Wraps", 23, 135.00, "RCP-143"],
+  ["SKU105", "تشيز ستيك وراب (Cheese Steak Wrap)", "Hot Wraps", 15, 180.00, "RCP-144"],
+
+  // 5. Salads
+  ["SKU100", "سلطة دجاج سيزر (Chicken Caesar Salad)", "Salads", 108, 165.00, "RCP-106"],
+  ["SKU103", "سلطة تونة (Tuna Salad)", "Salads", 117, 140.00, "RCP-109"],
+  ["SKU107", "علبة سلطة كينوا (Quinoa Salad)", "Salads", 38, 160.00, "RCP-108"],
+  ["SKU102", "سلطة بنجر وتفاح أخضر وذرة (beetroot, green apple and Sweet Corn)", "Salads", 62, 85.00, "RCP-105"],
+  ["SKU101", "سلطة يونانية بالفيتا (Greek Salad With Feta Cheese)", "Salads", 55, 95.00, "RCP-107"],
+
+  // 6. Cold sandwiches (Total Qty: 172 | Total: 27,500.00 EGP)
+  ["SKU197", "ساندوتش روست بيف بريسكت (Roast-beef brisket sandwich)", "Cold sandwiches", 67, 170.00, "RCP-122"],
+  ["SKU198", "ساندوتش دجاج سيزر بارد (Chicken caesar sandwich)", "Cold sandwiches", 59, 160.00, "RCP-142"],
+  ["SKU199", "ساندوتش مكس جبن بارد (Mix cheese sandwich)", "Cold sandwiches", 46, 145.00, "RCP-123"],
+
+  // 7. Bakery of the day (Total Qty: 450 | Total: 25,875.00 EGP)
+  ["SKU132", "دانيش فواكه طازج (Fruit Danish)", "Bakery of the day", 118, 60.00, "RCP-301"],
+  ["SKU127", "باتيه دجاج ومشروم (Pate Chicken and mushroom)", "Bakery of the day", 73, 65.00, "RCP-302"],
+  ["SKU130", "باتيه جبنة (Pate Cheese)", "Bakery of the day", 83, 55.00, "RCP-303"],
+  ["SKU131", "باتيه شيكولاتة (Pate Chocolate)", "Bakery of the day", 47, 55.00, "RCP-304"],
+  ["SKU133", "شرائح إنجلش كيك (English Cake Slices)", "Bakery of the day", 45, 45.00, "RCP-305"],
+  ["SKU126", "كرواسون فرنسي (Croissant)", "Bakery of the day", 33, 55.00, "RCP-306"],
+  ["SKU129", "باتيه بيبروني (Pate Pepperoni)", "Bakery of the day", 27, 60.00, "RCP-307"],
+  ["SKU128", "باتيه بسطرمة (Pate Pastrami)", "Bakery of the day", 24, 60.00, "RCP-308"],
+
+  // 8. Tuesday (Total Qty: 135 | Total: 10,125.00 EGP)
+  ["SKU195", "ساندوتش كبدة وسجق فينوس (Kebda & sojok fino bread)", "Tuesday", 135, 75.00, "RCP-195"],
+
+  // 9. Pizza (Total Qty: 70 | Total: 7,155.00 EGP)
+  ["SKU140", "بيتزا تشيكن رانش (Fried Chicken Ranch)", "Pizza", 27, 125.00, "RCP-140"],
+  ["SKU116", "بيتزا بيبروني (Pepperoni)", "Pizza", 25, 85.00, "RCP-127"],
+  ["SKU117", "بيتزا مارجريتا (Margarita)", "Pizza", 9, 90.00, "RCP-126"],
+  ["SKU113", "بيتزا تشيكن ماشروم (Chicken Mushroom)", "Pizza", 5, 105.00, "RCP-128"],
+  ["SKU118", "بيتزا خضار (Vegeterian)", "Pizza", 4, 80.00, "RCP-129"],
+
+  // 10. Mini Sandwich Box (Total Qty: 27 | Total: 5,160.00 EGP)
+  ["SKU119", "صندوق ميني ساندوتش 12 قطعة (Box of 12)", "Mini Sandwich Box", 24, 185.00, "RCP-115"],
+  ["SKU180", "صندوق ميني دانيش حلو 12 قطعة (Mini sweet danish box of 12)", "Mini Sandwich Box", 3, 240.00, "RCP-309"],
+
+  // 11. Dessert (Total Qty: 5 | Total: 520.00 EGP)
+  ["SKU181", "براونيز شيكولاتة بالكراميل (chocolate brownies caramel)", "Dessert", 3, 90.00, "RCP-310"],
+  ["SKU182", "تشيز كيك بالتوت الأزرق (cheesecake blueberry)", "Dessert", 2, 125.00, "RCP-311"]
 ];
 
 export const RECIPES_RAW: [string, string, [string, number][]][] = [
@@ -620,8 +639,8 @@ export const RECIPES_RAW: [string, string, [string, number][]][] = [
     ["عسل ابيض", 10]
   ]],
 
-  // 28. كينواه سالاد (صفحة 7)
-  ["RCP-108", "كينواه سالاد (Quinoa Salad)", [
+  // 28. علبة سلطة كينوا (صفحة 7)
+  ["RCP-108", "علبة سلطة كينوا (Quinoa Salad)", [
     ["كينواه سوداء", 80],
     ["كينواه بيضاء", 80],
     ["فلفل الوان مكس", 120],
@@ -640,20 +659,20 @@ export const RECIPES_RAW: [string, string, [string, number][]][] = [
     ["صوص هانى ماسترد", 60]
   ]],
 
-  // 30. تصنيع صدور دجاج سيزار سالاد (صفحة 8)
-  ["RCP-148", "تصنيع صدور دجاج سيزار سالاد (Caesar Chicken Prep)", [
-    ["صدور دجاج طازجة", 1000],
-    ["زيت عباد", 800],
-    ["زيت عباد", 350],
-    ["مسترده", 150],
-    ["عصير ليمون", 100],
-    ["خل تفاح", 50],
-    ["ملح ابيض", 40],
+  // 30. تتبيله صدور الفراخ سيزار سلاد
+  ["RCP-148", "تتبيله صدور الفراخ سيزار سلاد (Caesar Chicken Breast Marinade)", [
+    ["صدور دجاج", 5000],
     ["ثوم بودر", 25],
     ["بصل بودر", 25],
+    ["ملح ابيض", 40],
     ["فلفل اسود بودر", 25],
+    ["عصير ليمون", 100],
+    ["زيت عباد", 350],
+    ["مسترده", 150],
     ["زعتر خشن", 25],
-    ["مرقه دجاج بودر", 20]
+    ["مرقه دجاج بودر", 20],
+    ["خل تفاح", 50],
+    ["زيت عباد", 800]
   ]],
 
   // 31. ساندوتش دجاج كاساديا (صفحة 8)
@@ -679,23 +698,22 @@ export const RECIPES_RAW: [string, string, [string, number][]][] = [
     ["فلفل اسود", 15]
   ]],
 
-  // 33. تصنيع دجاج كاساديا (صفحة 9)
-  ["RCP-150", "تصنيع دجاج كاساديا (Quesadilla Chicken Prep)", [
+  // 33. تجهيز فراخ كاساديا
+  ["RCP-150", "تجهيز فراخ كاساديا (Chicken Quesadilla Prep)", [
     ["صدور فراخ مقطع شاورما", 5000],
-    ["زبادى", 1000],
-    ["زيت ذره", 800],
-    ["زيت عباد", 500],
-    ["خل ابيض", 400],
-    ["ملح", 120],
-    ["ثوم مفروم", 120],
     ["بابريكا", 60],
-    ["زعتر بودر", 50],
     ["كمون ناعم", 40],
     ["ثوم بودر", 40],
     ["بصل بودر", 40],
-    ["فلفل اسود", 40],
+    ["ملح", 120],
+    ["زعتر بودر", 50],
+    ["قرفه بودر", 28],
     ["جوز الطيب", 40],
-    ["قرفه بودر", 28]
+    ["فلفل اسود", 40],
+    ["خل ابيض", 400],
+    ["زيت ذره", 800],
+    ["زبادى", 1000],
+    ["ثوم مفروم", 120]
   ]],
 
   // 34. تصنيع خضار كاساديا (صفحة 9)
@@ -913,9 +931,9 @@ export const PREP_RAW: [string, string, number][] = [
   ["صوص ليمون جريك سالاد", "RCP-138", 1310],
   ["صوص ليمون لسلطة التونة", "RCP-139", 1310],
   ["صوص ليمون الكينوا سالاد", "RCP-147", 86.5],
-  ["صدور دجاج سيزار سالاد", "RCP-148", 2690],
+  ["صدور دجاج سيزار سالاد", "RCP-148", 6610],
   ["تتبيله بعد التسوية دجاج كاساديا", "RCP-149", 1310],
-  ["بورشن دجاج كاساديا", "RCP-150", 9498],
+  ["بورشن دجاج كاساديا", "RCP-150", 7784],
   ["بورشن خضار كاساديا", "RCP-151", 8560],
   ["بورشن دجاج شاورما", "RCP-133", 10928],
   ["توميه شاورما", "RCP-134", 968],
@@ -967,17 +985,31 @@ export function createInitialState(): AppState {
     yield: 1.0
   }));
 
+  const normalizeName = (s: string) => 
+    s.trim().replace(/[ةه]$/g, '').replace(/[ىي]$/g, 'ي').replace(/[أإآ]/g, 'ا').replace(/\s+/g, ' ');
+
   const ingMap = new Map(ing.map(x => [x.name, x.id]));
+  const ingNormMap = new Map(ing.map(x => [normalizeName(x.name), x.id]));
 
   const recipes: Recipe[] = RECIPES_RAW.map((r, idx) => ({
     id: `RCP-${String(idx + 1).padStart(3, '0')}`,
     code: r[0],
     name: r[1],
-    items: r[2].map(x => ({
-      ingredientId: ingMap.get(x[0]) || `ING-UNK-${Math.random().toString(36).slice(2, 6)}`,
-      ing: x[0],
-      std: x[1]
-    }))
+    items: r[2].map(x => {
+      let ingId = ingMap.get(x[0]) || ingNormMap.get(normalizeName(x[0]));
+      if (!ingId) {
+        if (x[0].includes('تتبيل') && x[0].includes('كاساديا')) {
+          ingId = ingMap.get('تتبيله بعد التسوية دجاج كاساديا') || ingMap.get('تتبيله بعد التسويه دجاج كاساديا') || ingMap.get('تتبيله مع التسويه دجاج كاساديا');
+        } else if (x[0].includes('كينوا') && x[0].includes('صوص')) {
+          ingId = ingMap.get('صوص ليمون الكينوا سالاد');
+        }
+      }
+      return {
+        ingredientId: ingId || `ING-UNK-${Math.random().toString(36).slice(2, 6)}`,
+        ing: x[0],
+        std: x[1]
+      };
+    })
   }));
 
   const recipeCodeMap = new Map(recipes.map(r => [r.code, r.id]));
@@ -994,7 +1026,7 @@ export function createInitialState(): AppState {
   }));
 
   return {
-    version: 4,
+    version: 5,
     ing,
     sales,
     recipes,
@@ -1015,7 +1047,7 @@ export function createInitialState(): AppState {
         at: new Date().toISOString(),
         user: "system",
         action: "initialization",
-        details: "تهيئة بيانات نظام D-Deli V4 مع نظام تقارير المصروفات المتكامل والمخزون"
+        details: "تهيئة بيانات مبيعات شهر أغسطس 2026 الرسمية (7,683 صنف مباع - إجمالي 569,730 ج.م) وحذف البيانات القديمة"
       }
     ],
     settings: {

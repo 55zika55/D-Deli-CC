@@ -14,7 +14,8 @@ import {
   Code, 
   User as UserIcon,
   ShieldCheck,
-  Activity
+  Activity,
+  Printer
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -27,6 +28,7 @@ interface HeaderProps {
   onLanguageChange: (lang: Language) => void;
   onAudit: (action: string, details: string) => void;
   onOpenDiagnostics?: () => void;
+  onOpenReportsPrint?: (report?: 'summary' | 'sales' | 'inventory' | 'menu_eng' | 'forecast' | 'expenses') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -38,7 +40,8 @@ export const Header: React.FC<HeaderProps> = ({
   onImportState,
   onLanguageChange,
   onAudit,
-  onOpenDiagnostics
+  onOpenDiagnostics,
+  onOpenReportsPrint
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const t = (key: string) => TRANSLATIONS[currentLang]?.[key] || key;
@@ -190,6 +193,18 @@ export const Header: React.FC<HeaderProps> = ({
             <Save className="w-3.5 h-3.5" />
             <span>{t("save_btn")}</span>
           </button>
+
+          {/* Official Reports & PDF Print Center */}
+          {onOpenReportsPrint && (
+            <button
+              onClick={() => onOpenReportsPrint('summary')}
+              className="flex items-center gap-1.5 bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition active:scale-95"
+              title={currentLang === 'ar' ? 'مركز طباعة التقارير الرسمية وإصدار PDF' : 'Official Reports & PDF Center'}
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>{currentLang === 'ar' ? 'طباعة التقارير / PDF' : 'Print / PDF'}</span>
+            </button>
+          )}
 
           {/* Standalone HTML Downloader */}
           <button
